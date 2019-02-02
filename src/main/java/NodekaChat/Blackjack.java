@@ -1,10 +1,7 @@
-package NodekaChat;/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+package NodekaChat;
 
 import com.lsd.umc.util.AnsiTable;
+
 import java.io.IOException;
 import java.util.Queue;
 import java.util.Timer;
@@ -12,10 +9,6 @@ import java.util.TimerTask;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-/**
- *
- * @author Leviticus
- */
 public class Blackjack extends NodekaChat implements Runnable {
 
     private final Object instance = new Object();

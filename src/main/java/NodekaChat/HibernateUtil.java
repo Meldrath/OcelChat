@@ -1,15 +1,20 @@
-package NodekaChat;/*
+package NodekaChat;
+
+/*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
 
-import java.util.List;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.service.ServiceRegistry;
+
+import java.util.List;
 
 /**
  * Hibernate Utility class with a convenient method to get Session Factory
@@ -18,22 +23,24 @@ import org.hibernate.cfg.Configuration;
  * @author Isaac
  */
 public class HibernateUtil {
-    
-    private static final SessionFactory sessionFactory;
-    
-    static {
-        try {
-            // Create the SessionFactory from standard (hibernate.cfg.xml) 
-            // config file.
-            sessionFactory = new Configuration().configure().buildSessionFactory();
-        } catch (Throwable ex) {
-            // Log the exception. 
-            System.err.println("Initial SessionFactory creation failed." + ex);
-            throw new ExceptionInInitializerError(ex);
-        }
-    }
-    
+
+    private static SessionFactory sessionFactory;
+
     public static SessionFactory getSessionFactory() {
+        if (null != sessionFactory)
+            return sessionFactory;
+
+        Configuration configuration = new Configuration();
+
+        configuration.configure();
+        ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().applySettings(configuration.getProperties()).configure().build();
+
+        try {
+            sessionFactory = configuration.buildSessionFactory(serviceRegistry);
+        } catch (HibernateException e) {
+            System.err.println("Initial SessionFactory creation failed." + e);
+            throw new ExceptionInInitializerError(e);
+        }
         return sessionFactory;
     }
 
@@ -49,7 +56,7 @@ public class HibernateUtil {
         boolean userExists = false;
         Transaction tx = session.beginTransaction();
         try {
-            List result = session.createQuery("FROM NodekaChat.User").list();
+            List result = session.createQuery("FROM User").list();
             for (User u : (List<User>) result) {
                 if (u.getLoginName() == null ? username == null : u.getLoginName().equals(username)) {
                     userExists = true;
@@ -73,7 +80,7 @@ public class HibernateUtil {
         Session session = getSessionFactory().openSession();
         Transaction tx = session.beginTransaction();
         session.flush();
-        List result = session.createQuery("FROM NodekaChat.User U where U.loginName = :name and U.password = :password")
+        List result = session.createQuery("FROM User U where U.loginName = :name and U.password = :password")
                 .setParameter("name", user.getLoginName())
                 .setParameter("password", user.getPassword())
                 .list();
@@ -104,12 +111,6 @@ public class HibernateUtil {
                 if (u.isChangeTag()) {
                     user.setChangeTag(true);
                 }
-                if (u.isAddChannel()) {
-                    user.setAddChannel(true);
-                }
-                if (u.isDeleteChannel()) {
-                    user.setDeleteChannel(true);
-                }
                 if (u.isKick()) {
                     user.setKick(true);
                 }
@@ -118,9 +119,6 @@ public class HibernateUtil {
                 }
                 if (u.isCanMute()) {
                     user.setCanMute(true);
-                }
-                if (u.isMove()) {
-                    user.setMove(true);
                 }
             }
         }
@@ -133,7 +131,7 @@ public class HibernateUtil {
         Transaction tx = session.beginTransaction();
         User target = null;
         try {
-            List result = session.createQuery("FROM NodekaChat.User").list();
+            List result = session.createQuery("FROM User").list();
             for (User u : (List<User>) result) {
                 if (u.getLoginName() == null ? username == null : u.getLoginName().equals(username)) {
                     target = u;
@@ -151,9 +149,9 @@ public class HibernateUtil {
     
     public void deleteUser(User user) {
         Session session = getSessionFactory().openSession();
-        Transaction tx = session.beginTransaction();;
+        Transaction tx = session.beginTransaction();
         try {
-            session.delete((User) session.load(User.class, user.getId()));
+            session.delete(session.load(User.class, user.getId()));
             tx.commit();
         } catch (HibernateException e) {
             if (tx != null) {
@@ -166,9 +164,9 @@ public class HibernateUtil {
     
     void updatePassword(User user, String password) {
         Session session = getSessionFactory().openSession();
-        Transaction tx = session.beginTransaction();;
+        Transaction tx = session.beginTransaction();
         try {
-            ((User) session.load(User.class, user.getId())).setPassword(password);
+            session.load(User.class, user.getId()).setPassword(password);
             tx.commit();
         } catch (HibernateException e) {
             if (tx != null) {

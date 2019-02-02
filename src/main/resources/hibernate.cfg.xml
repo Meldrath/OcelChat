@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-configuration PUBLIC
+        "-//Hibernate/Hibernate Configuration DTD//EN"
+        "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+    <session-factory>
+        <property name="hibernate.dialect">org.hibernate.dialect.MySQLDialect</property>
+        <property name="hibernate.connection.driver_class">com.mysql.jdbc.Driver</property>
+        <property name="hibernate.connection.url">jdbc:mysql://localhost:3306/nodeka</property>
+        <property name="hibernate.connection.username">root</property>
+        <property name="hibernate.connection.password">*Orion07</property>
+        <property name="hibernate.show_sql">true</property>
+        <property name="hibernate.query.factory_class">
+            org.hibernate.hql.internal.classic.ClassicQueryTranslatorFactory
+        </property>
+        <property name="hibernate.c3p0.min_size">1</property>
+        <property name="hibernate.c3p0.max_size">10</property>
+        <property name="hibernate.c3p0.timeout">30</property>
+        <property name="hibernate.c3p0.max_statements">5</property>
+        <property name="hibernate.c3p0.idle_test_period">30</property>
+        <mapping class="NodekaChat.User" file="" jar="" package="" resource="user.hbm.xml"/>
+        <mapping resource="user.hbm.xml"/>
+    </session-factory>
+</hibernate-configuration>

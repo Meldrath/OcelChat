@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD//EN"
+        "http://hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<!-- Generated Dec 6, 2015 4:29:14 AM by Hibernate Tools 4.3.1 -->
+<hibernate-mapping>
+    <class name="NodekaChat.User" table="ichat_user">
+        <id name="id" type="int">
+            <column name="user_ID"/>
+            <generator class="increment"/>
+        </id>
+        <property name="loginName" type="string">
+            <column name="user_Name"/>
+        </property>
+        <property name="password" type="string">
+            <column name="user_Password"/>
+        </property>
+        <property name="administrator" type="boolean">
+            <column name="isAdmin"/>
+        </property>
+        <property name="adminChannel" type="boolean">
+            <column name="adminChannel"/>
+        </property>
+        <property name="defaultChannel" type="string">
+            <column name="defaultChannel"/>
+        </property>
+        <property name="kick" type="boolean">
+            <column name="kick"/>
+        </property>
+        <property name="ban" type="boolean">
+            <column name="ban"/>
+        </property>
+        <property name="changeTag" type="boolean">
+            <column name="updateOtherTag"/>
+        </property>
+        <property name="motdUpdate" type="boolean">
+            <column name="motdUpdate"/>
+        </property>
+        <property name="changePassword" type="boolean">
+            <column name="updateOtherPassword"/>
+        </property>
+        <property name="addUser" type="boolean">
+            <column name="addUser"/>
+        </property>
+        <property name="deleteUser" type="boolean">
+            <column name="deleteUser"/>
+        </property>
+        <property name="canMute" type="boolean">
+            <column name="mute"/>
+        </property>
+        <property name="canBlind" type="boolean">
+            <column name="blind"/>
+        </property>
+    </class>
+</hibernate-mapping>

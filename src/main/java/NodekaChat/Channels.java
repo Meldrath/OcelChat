@@ -5,6 +5,7 @@ package NodekaChat;/*
  */
 
 import com.lsd.umc.util.AnsiTable;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -200,7 +201,7 @@ public class Channels extends NodekaChat {
     }
 
     /**
-     * @param room the rooms to add to room array
+     * @param room the rooms to add to channel array
      */
     public void addChannel(String room) {
         this.channels.add(room);
@@ -226,16 +227,17 @@ public class Channels extends NodekaChat {
      * @param channel
      * @return
      */
-    public int usersInRoomCount(String channel) {
+    public int usersInChannelCount(String channel) {
         int amount = 0;
         if (onlineUsers.size() > 0 && !channel.isEmpty()) {
-            for (User p : onlineUsers) {
-                if (p.getCurrentChannel() == null || !p.getCurrentChannel().equalsIgnoreCase(channel)) {
-                } else {
-                    amount++;
+            for (User u : onlineUsers) {
+                for (String sub : u.subscribedChannels()) {
+                    if (sub.equalsIgnoreCase(channel)) {
+                        amount++;
+                    }
                 }
+                return amount;
             }
-            return amount;
         }
         return 0;
     }

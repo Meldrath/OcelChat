@@ -1,14 +1,19 @@
-package NodekaChat;/*
+package NodekaChat;
+
+/*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
 
 import com.lsd.umc.util.AnsiTable;
+
 import java.io.BufferedReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -31,6 +36,7 @@ public class User {
     private int timeout = 0;
 
     private int id;
+
     private boolean administrator;
     private boolean adminChannel;
     private boolean kick;
@@ -46,16 +52,11 @@ public class User {
     private boolean blind = false;
 
     private boolean canMute;
-    private boolean muteRoom;
+    private boolean muteChannel;
     private boolean muteAll;
     private boolean muted = false;
 
-    private boolean move;
-    private boolean moveRoom;
-    private boolean moveAll;
-
-    private boolean addChannel;
-    private boolean deleteChannel;
+    private List<String> channels;
 
     User(String noAnsiName, String password, boolean admin) {
         this.userMailBox = new ConcurrentLinkedQueue<>();
@@ -68,6 +69,11 @@ public class User {
     User() {
         this.userMailBox = new ConcurrentLinkedQueue<>();
         genericCommands();
+        genericChannels();
+    }
+
+    private void genericChannels() {
+        channels = new ArrayList<>(Arrays.asList("Lobby", "Auction", "Misfits"));
     }
 
     private void genericCommands() {
@@ -78,8 +84,11 @@ public class User {
                 + AnsiTable.getCode("light black") + ")");
         addCommandToUser("BLACKJACK");
         addCommandToUser("DICE");
-        addCommandToUser("JOIN");
-        addCommandToUser("LIST");
+        addCommandToUser("TOGGLE");
+        addCommandToUser("ADDCHANNEL");
+        addCommandToUser("DELETECHANNEL");
+        addCommandToUser("CHANNELS");
+        addCommandToUser("SUB");
         addCommandToUser("MAIL");
         addCommandToUser("PASSWORD");
         addCommandToUser("PM");
@@ -411,73 +420,20 @@ public class User {
             addAdminCommandToUser("CHANGETAG");
         }
     }
-
     /**
-     * @return the changeRoom
+     * @return the muteChannel
      */
-    public boolean isMove() {
-        return move;
+    public boolean isMuteChannel() {
+        return muteChannel;
     }
 
     /**
-     * @param move
+     * @param muteChannel the muteChannel to set
      */
-    public void setMove(boolean move) {
-        this.move = move;
-        if (move) {
-            addAdminCommandToUser("MOVE");
-        }
-    }
-
-    /**
-     * @return the muteRoom
-     */
-    public boolean isMuteRoom() {
-        return muteRoom;
-    }
-
-    /**
-     * @param muteRoom the muteRoom to set
-     */
-    public void setMuteRoom(boolean muteRoom) {
-        this.muteRoom = muteRoom;
-        if (muteRoom) {
-            addAdminCommandToUser("MUTEROOM");
-        }
-    }
-
-    /**
-     * @return the moveAll
-     */
-    public boolean isMoveAll() {
-        return moveAll;
-    }
-
-    /**
-     * @param moveAll the moveAll to set
-     */
-    public void setMoveAll(boolean moveAll) {
-        this.moveAll = moveAll;
-        if (moveAll) {
-            addAdminCommandToUser("MOVEALL");
-        }
-
-    }
-
-    /**
-     * @return the moveAll
-     */
-    public boolean isMoveRoom() {
-        return moveRoom;
-    }
-
-    /**
-     * @param moveRoom
-     */
-    public void setMoveRoom(boolean moveRoom) {
-        this.moveRoom = moveRoom;
-        if (moveRoom) {
-            addAdminCommandToUser("MOVEROOM");
+    public void setMuteChannel(boolean muteChannel) {
+        this.muteChannel = muteChannel;
+        if (muteChannel) {
+            addAdminCommandToUser("MUTECHANNEL");
         }
     }
 
@@ -562,37 +518,6 @@ public class User {
     }
 
     /**
-     * @return the createRoom
-     */
-    public boolean isAddChannel() {
-        return addChannel;
-    }
-
-    /**
-     * @param addChannel the createRoom to set
-     */
-    public void setAddChannel(boolean addChannel) {
-        this.addChannel = addChannel;
-        if (addChannel) {
-            addCommandToUser("ADDCHANNEL");
-        }
-    }
-
-    public boolean isDeleteChannel() {
-        return deleteChannel;
-    }
-
-    /**
-     * @param deleteChannel
-     */
-    public void setDeleteChannel(boolean deleteChannel) {
-        this.deleteChannel = deleteChannel;
-        if (deleteChannel) {
-            addCommandToUser("DELETECHANNEL");
-        }
-    }
-
-    /**
      * @return the muted
      */
     public boolean isMuted() {
@@ -649,5 +574,37 @@ public class User {
      */
     public void setMuteAll(boolean muteAll) {
         this.muteAll = muteAll;
+    }
+
+    public boolean isSubscribedToChannel(String s) {
+        boolean isSubscribed = false;
+        for (String sub : subscribedChannels()) {
+            if (sub.equalsIgnoreCase(s)) {
+                isSubscribed = true;
+            }
+        }
+        return isSubscribed;
+    }
+
+    public List<String> subscribedChannels() {
+        Collections.sort(channels);
+        return channels;
+    }
+
+    public void setSubscribedChannels(List<String> channels) {
+
+    }
+
+    public boolean addChannelToSubscription(String s) {
+        if (!channels.contains(s.toLowerCase())) {
+            channels.add(s);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public void deleteChannelFromSubscription(String s) {
+        subscribedChannels().remove(s);
     }
 }

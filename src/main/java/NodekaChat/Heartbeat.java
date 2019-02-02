@@ -1,6 +1,6 @@
 package NodekaChat;
 
-class Heartbeat extends NodekaChat implements Runnable {
+class Heartbeat implements Runnable {
 
     private final Object instance = new Object();
 
@@ -15,7 +15,7 @@ class Heartbeat extends NodekaChat implements Runnable {
 
     @Override
     public void run() {
-        for (User u : onlineUsers) {
+        for (User u : NodekaChat.onlineUsers) {
             u.incrementTimeout();
             u.getOutput().println("BEAT");
         }

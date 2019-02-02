@@ -1,10 +1,13 @@
-package NodekaChat;/*
+package NodekaChat;
+
+/*
  NodekaChat.NodekaChat core concept is based off of http://cs.lmu.edu/~ray/notes/javanetexamples/
  All code is by: Isaac Croas.
  Open to permissible use, please contact me at incroas@hotmail.com to use the source code.
  */
 
 import com.lsd.umc.util.AnsiTable;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -12,22 +15,15 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- *
- * @author Isaac
- */
 public class TCPIPConnection extends NodekaChat implements Runnable {
 
+    private Announcements announcements;
     private HibernateUtil hibernate = new HibernateUtil();
     private final Pattern p = Pattern.compile("([^\"]\\S*|\".+?\")\\s*");
     private Message message = new Message();
@@ -83,10 +79,9 @@ public class TCPIPConnection extends NodekaChat implements Runnable {
                     try {
                         clientVersion = user.getInput().readLine().trim();
                     } catch (IOException | NumberFormatException | NullPointerException e) {
-                        System.out.println(e + clientVersion + " - version issue.");
+                        System.out.println(clientVersion + " - version issue.");
                     }
                     if (clientVersion.isEmpty() || !clientVersion.equals(version)) {
-                        //message.personalMessage("LOGIN", "Since you can't handle me testing stuff on the server I'll just bring it down.", user);
                         message.personalMessage("LOGIN", "OcelChat: Your version is out of date. Please visit https://s3-us-west-2.amazonaws.com/ocelplugins/Plugins/OcelChat.zip for the newest version.", user);
                         connectedClient = false;
                         break;
@@ -141,7 +136,7 @@ public class TCPIPConnection extends NodekaChat implements Runnable {
 
                 message.personalMessage("SERVER", "MOTD - " + motd, user);
                 message.personalMessage("SERVER", onlineUsers.size() + " users currently logged in.", user);
-                message.personalMessage("SERVER", String.valueOf(room.usersInRoomCount(user.getCurrentChannel())) + " users currently in " + user.getCurrentChannel() + ".", user);
+                message.personalMessage("SERVER", String.valueOf(channel.usersInChannelCount(user.getCurrentChannel())) + " users currently in " + user.getCurrentChannel() + ".", user);
                 for (User u : onlineUsers) {
                     if (u.isAdministrator() && u.isDeleteUser()) {
                         message.personalMessage("SERVER", AnsiTable.getCode("yellow") + "[ " + AnsiTable.getCode("light red") + "SUPER ADMIN" + AnsiTable.getCode("yellow") + " ] " + AnsiTable.getCode("white") + u.getLoginName() + " (" + u.getDisplayName() + AnsiTable.getCode("white") + ") in channel: " + u.getCurrentChannel(), user);
@@ -179,7 +174,6 @@ public class TCPIPConnection extends NodekaChat implements Runnable {
 
                     if (parsedInput.size() > 0) {
                         if (!parsedInput.isEmpty()) {
-                            //noinspection Annotator
                             if (parsedInput.get(0).replaceAll("\033\\[\\d+;\\d+m", "").replaceAll("\033\\[\\d+m", "").matches("\\[PK\\]")) {
                                 parsedInput.remove(0);
                                 parsedInput.remove(0);
@@ -262,6 +256,27 @@ public class TCPIPConnection extends NodekaChat implements Runnable {
                                     message.globalMessage("LOCATION", user.getLoginName() + ": " + parsedInput.get(1));
                                 }
                                 break;
+                            case "TOGGLE":
+                                boolean roomExists = false;
+                                if (parsedInput.size() == 2) {
+                                    for (String s : channel.getChannels()) {
+                                        if (parsedInput.get(1).equalsIgnoreCase(s)) {
+                                            if (user.isSubscribedToChannel(s)) {
+                                                user.deleteChannelFromSubscription(s);
+                                                message.personalMessage("SERVER", "You are now unsubscribed to the channel: " + s + ".", user);
+                                                message.globalMessage("GLOBAL", user.getDisplayName() + " " + AnsiTable.getCode("white") + "has left the channel: " + s + ".");
+                                            } else {
+                                                user.addChannelToSubscription(s);
+                                                message.globalMessage("GLOBAL", user.getDisplayName() + " " + AnsiTable.getCode("white") + "has joined the channel: " + s + ".");
+                                                message.personalMessage("SERVER", "You are now subscribed to the channel: " + s + ".", user);
+                                                message.personalMessage("SERVER", String.valueOf(channel.usersInChannelCount(s)) + " users currently in " + s + ".", user);
+                                            }
+                                        }
+                                    }
+                                } else if (parsedInput.size() != 2 || !roomExists) {
+                                    message.personalMessage("SERVER", "Invalid command, please follow the syntax #ochat TOGGLE <channel>.", user);
+                                }
+                                break;
                             case "WHO":
                                 message.personalMessage("SERVER", onlineUsers.size() + " users currently logged in.", user);
                                 for (User u : onlineUsers) {
@@ -316,36 +331,17 @@ public class TCPIPConnection extends NodekaChat implements Runnable {
                                     message.personalMessage("SERVER", "I'm sorry, " + user.getLoginName() + ". I'm afraid I can't do that.", user);
                                 }
                                 break;
-                            case "JOIN":
-                                boolean roomExists = false;
-                                if (parsedInput.size() == 2) {
-                                    for (String s : room.getChannels()) {
-                                        if (parsedInput.get(1).equalsIgnoreCase(s)) {
-                                            if (user.getCurrentChannel().equalsIgnoreCase(parsedInput.get(1))) {
-                                                message.personalMessage("SERVER", "You are already in the channel: " + s + ".", user);
-                                            } else {
-                                                message.broadcastMessage("has left the channel.", user);
-                                                user.setCurrentChannel(s);
-                                                message.globalMessage("GLOBAL", user.getDisplayName() + " " + AnsiTable.getCode("white") + "has joined the channel: " + user.getCurrentChannel() + ".");
-                                                message.personalMessage("SERVER", String.valueOf(room.usersInRoomCount(user.getCurrentChannel())) + " users currently in " + user.getCurrentChannel() + ".", user);
-                                            }
-                                        }
-                                    }
-                                } else if (parsedInput.size() != 2 || !roomExists) {
-                                    message.personalMessage("SERVER", "Invalid command, please follow the syntax #ochat JOIN <channel>.", user);
-                                }
-                                break;
                             case "ADDCHANNEL":
                                 roomExists = false;
-                                if (parsedInput.size() == 2 && user.isAddChannel()) {
-                                    for (String s : room.getChannels()) {
+                                if (parsedInput.size() == 2) {
+                                    for (String s : channel.getChannels()) {
                                         if (parsedInput.get(1).toLowerCase().equals(s.toLowerCase())) {
                                             roomExists = true;
                                             message.personalMessage("SERVER", "This channel name already exists.", user);
                                         }
                                     }
                                     if (!roomExists) {
-                                        room.addChannel(parsedInput.get(1).substring(0, 1).toUpperCase().concat(parsedInput.get(1).substring(1, parsedInput.get(1).length())).trim());
+                                        channel.addChannel(parsedInput.get(1).substring(0, 1).toUpperCase().concat(parsedInput.get(1).substring(1, parsedInput.get(1).length())).trim());
                                         message.globalMessage("GLOBAL", "A new channel has been created: " + parsedInput.get(1).substring(0, 1).toUpperCase().concat(parsedInput.get(1).substring(1, parsedInput.get(1).length())).trim() + ".");
                                     }
                                 } else if (parsedInput.size() != 2) {
@@ -355,8 +351,8 @@ public class TCPIPConnection extends NodekaChat implements Runnable {
                                 }
                                 break;
                             case "DELETECHANNEL":
-                                if (parsedInput.size() == 2 && user.isDeleteChannel()) {
-                                    if (room.deleteChannel(parsedInput.get(1).trim())) {
+                                if (parsedInput.size() == 2) {
+                                    if (channel.deleteChannel(parsedInput.get(1).trim())) {
                                         message.adminMessage(user.getLoginName() + " has deleted the channel " + parsedInput.get(1) + "!!");
                                     } else {
                                         message.personalMessage("SERVER", "I'm sorry, " + user.getLoginName() + ". I'm afraid I can't do that.", user);
@@ -365,22 +361,16 @@ public class TCPIPConnection extends NodekaChat implements Runnable {
                                     message.personalMessage("SERVER", "Invalid command, please follow the syntax #ochat DELETECHANNEL <channel>.", user);
                                 }
                                 break;
-                            case "MOVE":
-                                if (parsedInput.size() == 3 && user.isMove()) {
-                                    if (room.moveChannel(parsedInput.get(1), parsedInput.get(2))) {
-                                        message.adminMessage(user.getLoginName() + " has moved " + parsedInput.get(1) + " to channel " + parsedInput.get(2) + "!!");
-                                    } else {
-                                        message.personalMessage("SERVER", "I'm sorry, " + user.getLoginName() + ". I'm afraid I can't do that.", user);
-                                    }
-                                } else if (parsedInput.size() != 3) {
-                                    message.personalMessage("SERVER", "Invalid command, please follow the syntax #ochat MOVE <user> <channel>.", user);
-                                } else {
-                                    message.personalMessage("SERVER", "I'm sorry, " + user.getLoginName() + ". I'm afraid I can't do that.", user);
+                            case "CHANNELS":
+                                message.personalMessage("SERVER", "Available Channels:", user);
+                                for (String s : channel.getChannels()) {
+                                    //for (String sub : user)
+                                    message.personalMessage("SERVER", s, user);
                                 }
                                 break;
-                            case "LIST":
-                                message.personalMessage("SERVER", "Available Channels:", user);
-                                for (String s : room.getChannels()) {
+                            case "SUB":
+                                message.personalMessage("SERVER", "Subscribed Channels:", user);
+                                for (String s : user.subscribedChannels()) {
                                     message.personalMessage("SERVER", s, user);
                                 }
                                 break;
@@ -611,6 +601,7 @@ public class TCPIPConnection extends NodekaChat implements Runnable {
                                     message.personalMessage("SERVER", "You have been muted.", user);
                                 } else {
                                     message.broadcastMessage(input, user);
+
                                 }
                                 break;
                         }

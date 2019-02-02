@@ -1,36 +1,26 @@
-package NodekaChat;//Move to Hibernate
+package NodekaChat;
 
 import com.lsd.umc.util.AnsiTable;
+
 import java.util.Collections;
 import java.util.LinkedList;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
-/**
- *
- * @author Leviticus
- */
-public class Announcements extends NodekaChat implements Runnable {
+public class Announcements implements Runnable {
 
     private static final Object instance = new Object();
 
-    /**
-     *
-     */
-    protected static final LinkedList<String> announcementList = new LinkedList<>();
+    public LinkedList<String> announcementList = new LinkedList<>();
 
-    protected Announcements() {
+    Announcements() {
         announcementList.add("For a list of available chat rooms: #ochat LIST");
-        announcementList.add("MOTD - " + motd);
+        announcementList.add("MOTD - " + NodekaChat.motd);
         announcementList.add("Have you played " + AnsiTable.getCode("yellow") + "Blackjack " + AnsiTable.getCode("white") + "today? #ochat BLACKJACK");
         announcementList.add("Did you know OcelChat has rooms, mail, and private messaging? #ochat HELP");
         announcementList.add("It can only be attributable to human error.");
         announcementList.add("This conversation can serve no purpose anymore. Goodbye.");
         announcementList.add("I know I've made some very poor decisions recently, but I can give you my complete assurance that my work will be back to normal.");
-    }
-
-    public void removeAnnouncements() {
-
     }
 
     public LinkedList<String> getAnnouncements() {
@@ -53,7 +43,7 @@ public class Announcements extends NodekaChat implements Runnable {
     }
 
     // Runtime initialization
-    // By defualt ThreadSafe
+    // By default ThreadSafe
     public static Object getInstance() {
         return instance;
     }
@@ -65,9 +55,9 @@ public class Announcements extends NodekaChat implements Runnable {
         for (String s : announcementList) {
             message.globalMessage("GLOBAL", s);
             try {
-                TimeUnit.MINUTES.sleep(new Random().nextInt(60));
-            } catch (InterruptedException ex) {
-                System.out.println("Announcement failed.");
+                TimeUnit.MINUTES.sleep(ThreadLocalRandom.current().nextInt(30, 90));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
     }
